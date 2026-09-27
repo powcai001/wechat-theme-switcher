@@ -1,35 +1,251 @@
-# Roadmap
+# Roadmap · 执行清单
 
-## 0.9 — Stability release
+**当前版本：** v0.8.2  
+**更新日期：** 2026-09-27  
+**当前发布方式：** GitHub Release + 浏览器离线安装  
+**当前明确决策：** 暂不上架 Chrome Web Store / Edge Add-ons，先把公众号真实环境稳定性做好。
 
-- Real WeChat draft end-to-end regression.
-- Harden title-field detection.
-- Warn when the article body was manually edited after the last Markdown sync.
-- Long-article performance tests.
-- Undo / redo regression.
-- Save-and-reload regression.
-- Reduce permissions and remove development-only reload flow from the production path.
+## 当前状态快照
 
-## 0.10 — Experience release
+### 已完成
 
-- Curate 8–10 default themes.
-- Review all bundled themes for code, table, quote, image and dark-mode quality.
-- Local Markdown snapshots.
-- Export Markdown and themed HTML.
-- Clearer diagnostics for editor detection and write failures.
+- [x] Markdown 源文工作台
+- [x] `.md` 文件导入与拖拽导入
+- [x] 从公众号正文导入 Markdown
+- [x] Markdown 自动同步正文
+- [x] 第一个 H1 自动写入公众号标题并从正文移除
+- [x] 主题连续切换
+- [x] 主题搜索、最近使用、收藏
+- [x] 右侧边缘垂直居中入口
+- [x] 约 580px 宽的排版工作台
+- [x] 代码块显式 `<br>` 保留换行
+- [x] 多图转公众号兼容 Table
+- [x] 任务列表复选框
+- [x] 异常多列表头自动拆分
+- [x] 移除旧的清除格式 / 恢复主题按钮
+- [x] GitHub 公开仓库
+- [x] GitHub Release 离线安装包
+- [x] 离线安装 README 与 INSTALL 文档
+- [x] 隐私政策、路线图、变更记录、贡献指南
+- [x] 综合语法测试文档
 
-## 1.0 — Online extension release
+### 当前关键设计决策
 
-- Chrome Web Store submission.
-- Edge Add-ons submission.
-- Store listing screenshots and descriptions.
-- Formal onboarding.
-- Semantic versioning and release checklist.
+- [x] Markdown 是唯一源文稿；公众号正文是渲染结果。
+- [x] 每次切换主题都从 Markdown 重建 HTML，不在旧正文 HTML 上继续补丁。
+- [x] 不上传文章内容。
+- [x] 不请求第三方 AI API。
+- [x] 不自动保存、不自动群发、不代替用户发布。
+- [x] 图片上传继续走公众号编辑器官方流程。
+- [x] 先提供 GitHub 离线安装；插件商店上架暂缓。
 
-## Later candidates
+---
 
-- Custom theme editor.
-- Local image insertion through the official editor.
-- SiYuan import.
-- Multi-platform export for Zhihu / Xiaohongshu.
-- LaTeX rendering.
+## 0.9 — 稳定性版本
+
+目标：证明插件在真实公众号编辑页里可靠，不丢内容、不破坏格式、不拖慢页面。
+
+### A. 真实公众号端到端回归
+
+必须使用空白测试草稿，不使用正式文章。
+
+- [ ] 从 GitHub Release 下载 zip 并离线安装
+- [ ] 刷新公众号编辑页后能看到右侧「主题排版」入口
+- [ ] 导入 `tests/fixtures/comprehensive.md`
+- [ ] 验证第一个 H1 写入公众号标题输入框
+- [ ] 验证正文不再重复显示第一个 H1
+- [ ] 验证标题修改后再次同步仍正确
+- [ ] 验证粗体、斜体、行内代码、链接
+- [ ] 验证引用、嵌套引用、引用内标题
+- [ ] 验证无序列表、有序列表、任务列表
+- [ ] 验证 JavaScript 代码块换行
+- [ ] 验证 Python 代码块缩进
+- [ ] 验证 Shell 代码块空行
+- [ ] 验证表格四列表头
+- [ ] 验证连续多图布局
+- [ ] 连续切换至少 5 个主题
+- [ ] 使用公众号「保存草稿」
+- [ ] 刷新页面后重新打开草稿
+- [ ] 确认标题、正文、主题样式仍保留
+- [ ] 记录截图或屏幕录像到 `docs/regressions/`
+
+验收：无内容丢失、无主题残留、代码换行保留，保存刷新后结果一致。
+
+### B. 标题输入框识别加固
+
+- [ ] 在真实公众号页面记录标题输入框的 DOM 结构
+- [ ] 补充常见 selector
+- [ ] 找不到标题输入框时显示明确错误
+- [ ] 正文同步不被标题识别失败阻断
+- [ ] 增加“复制诊断信息”能力，不包含文章正文
+- [ ] 评估是否需要“手动选择标题输入框”兜底
+
+验收：正常自动写入；识别失败时用户能看懂原因并继续排版正文。
+
+### C. 手动编辑冲突提示
+
+当前规则是 Markdown 源文优先，可能覆盖用户直接在公众号正文里的修改。
+
+- [ ] 记录每次 Markdown 同步后的正文签名
+- [ ] 监听公众号正文手动输入
+- [ ] 检测“正文已偏离 Markdown 渲染结果”
+- [ ] 在工作台显示冲突提示
+- [ ] 提供两个动作：
+  - [ ] 以 Markdown 为准
+  - [ ] 从正文重新导入 Markdown
+- [ ] 自动同步在冲突状态下暂停
+- [ ] 用户选择后再恢复
+- [ ] 用空白草稿测试不丢正文
+
+验收：手动修改不会被静默覆盖；用户能明确选择保留哪边。
+
+### D. 长文章与性能
+
+- [ ] 准备 5,000 字测试文章
+- [ ] 准备 10,000 字测试文章
+- [ ] 测量 Markdown 输入延迟
+- [ ] 测量自动同步耗时
+- [ ] 测量主题切换耗时
+- [ ] 确认输入时无明显卡顿
+- [ ] 确认公众号页面滚动流畅
+- [ ] 确认主题面板滚动流畅
+- [ ] 如超过可接受范围，把渲染放入 idle callback 或 Worker
+
+验收：10,000 字文章下，主题切换仍可接受，页面不假死。
+
+### E. 撤销 / 重做回归
+
+- [ ] 应用主题后执行浏览器撤销
+- [ ] 执行重做
+- [ ] 连续切换多个主题后撤销
+- [ ] 修改 Markdown 后撤销
+- [ ] 记录公众号编辑器是否保持内部状态一致
+- [ ] 如撤销异常，限制或显式提示
+
+验收：不会出现页面显示与编辑器内部状态不一致。
+
+### F. 全主题回归
+
+- [ ] 建立主题回归表：20 个主题 × 常见节点
+- [ ] 检查 H1 / H2 / H3
+- [ ] 检查正文和行内代码
+- [ ] 检查引用
+- [ ] 检查列表和任务列表
+- [ ] 检查代码块
+- [ ] 检查表格
+- [ ] 检查图片
+- [ ] 检查深色模式风险
+- [ ] 标记推荐主题、可用主题、需修复主题
+
+验收：至少 8 个主题可作为默认推荐；不可用主题不默认展示。
+
+### G. 0.9 发布检查
+
+- [ ] 修复真实环境发现的问题
+- [ ] 更新 Feature Ledger
+- [ ] 更新 CHANGELOG
+- [ ] 更新 README 截图
+- [ ] 版本升级到 0.9.0
+- [ ] 构建 Release zip
+- [ ] 用 zip 重新安装验证
+- [ ] 打 tag 并发布 GitHub Release
+
+验收：用户只按 README 就能完成离线安装和使用。
+
+---
+
+## 0.10 — 体验优化版本
+
+目标：让默认使用更快、更清楚、更少选择负担。
+
+- [ ] 精选 8～10 个默认主题
+- [ ] 折叠或降级低质量主题
+- [ ] 支持自定义主题参数
+- [ ] 本地 Markdown 快照
+- [ ] 快照恢复入口
+- [ ] 导出 Markdown
+- [ ] 导出主题化 HTML
+- [ ] 更清晰的加载状态
+- [ ] 更明确的错误分类：
+  - [ ] 正文未找到
+  - [ ] 标题未找到
+  - [ ] Markdown 解析失败
+  - [ ] 编辑器拒绝写入
+  - [ ] 保存状态未知
+- [ ] 支持用户提交不包含正文的技术诊断
+- [ ] 优化窄屏布局
+- [ ] 键盘快捷键与焦点管理
+
+验收：新用户不用解释也能完成“导入 Markdown → 选主题 → 保存草稿”。
+
+---
+
+## 1.0 — 稳定离线发布版本
+
+目标：作为可靠的 GitHub 离线插件长期维护，不依赖插件商店。
+
+- [ ] 完整用户文档
+- [ ] 常见问题文档
+- [ ] 安装失败排查文档
+- [ ] 版本升级与回滚说明
+- [ ] 自动化 smoke test
+- [ ] 构建脚本固定化
+- [ ] Release 检查清单
+- [ ] GitHub Issue 模板
+- [ ] Bug 报告模板
+- [ ] 功能请求模板
+- [ ] 维护节奏说明
+- [ ] 最终权限审查
+- [ ] 最终隐私审查
+- [ ] v1.0.0 GitHub Release
+
+验收：非商店渠道也能安全安装、升级、回滚和反馈。
+
+---
+
+## 暂缓项
+
+### 插件商店上架
+
+原计划已暂缓；等 1.0 离线版本稳定后再评估。
+
+- [ ] Chrome Web Store 材料
+- [ ] Edge Add-ons 材料
+- [ ] 审核演示视频
+- [ ] 商店截图
+- [ ] 商店隐私说明
+- [ ] 商店发布流程
+
+### 后续功能候选
+
+- [ ] 本地图片插入，优先复用公众号官方编辑器能力
+- [ ] AI 配图建议
+- [ ] LaTeX 数学公式渲染
+- [ ] 思源笔记导入
+- [ ] 知乎导出
+- [ ] 小红书导出
+- [ ] 多平台发布工作流
+
+### 明确不做
+
+- [ ] 不自动群发
+- [ ] 不自动发布
+- [ ] 不上传文章
+- [ ] 不保存公众号登录凭证
+- [ ] 不绕过公众号图片上传机制
+
+---
+
+## 维护规则
+
+- 每次修改前先跑：
+
+```bash
+node --check content.js
+python3 -m json.tool manifest.json
+```
+
+- 每次涉及排版逻辑，都使用 `tests/fixtures/comprehensive.md` 回归。
+- 每次发布必须更新 `CHANGELOG.md`。
+- 涉及真实公众号 DOM 的改动，必须在空白草稿验证保存与刷新。
+- 不在 Issue 或文档中粘贴私密文章正文。

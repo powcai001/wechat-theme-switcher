@@ -11,7 +11,8 @@
     recent: 'wechatThemeSpikeRecentThemes',
     favorites: 'wechatThemeSpikeFavoriteThemes',
     markdownSource: 'wechatThemeSpikeMarkdownSource',
-    markdownAutoSync: 'wechatThemeSpikeMarkdownAutoSync'
+    markdownAutoSync: 'wechatThemeSpikeMarkdownAutoSync',
+    panelOpen: 'wechatThemeSpikePanelOpen'
   };
   let currentTheme = null;
   let recentThemes = [];
@@ -960,6 +961,13 @@
     try { chrome.storage.local.set({ [key]: value }); } catch (_) { /* Keep the panel usable if storage is unavailable. */ }
   }
 
+  function setPanelOpen(open, focusInput = false) {
+    ui.panel.hidden = !open;
+    ui.launcher.setAttribute('aria-expanded', String(open));
+    savePreference(storageKeys.panelOpen, open);
+    if (open && focusInput) ui.markdownInput.focus();
+  }
+
   function toggleFavorite(key) {
     favoriteThemes = favoriteThemes.includes(key)
       ? favoriteThemes.filter(item => item !== key)
@@ -1129,14 +1137,9 @@
       importFileButton: $('[data-import-file]'), fileInput: $('.file-input'),
       tabs: [...shadow.querySelectorAll('.tab')]
     };
-    ui.launcher.addEventListener('click', () => {
-      ui.panel.hidden = !ui.panel.hidden;
-      ui.launcher.setAttribute('aria-expanded', String(!ui.panel.hidden));
-      if (!ui.panel.hidden) ui.markdownInput.focus();
-    });
+    ui.launcher.addEventListener('click', () => setPanelOpen(ui.panel.hidden, true));
     $('.close').addEventListener('click', () => {
-      ui.panel.hidden = true;
-      ui.launcher.setAttribute('aria-expanded', 'false');
+      setPanelOpen(false);
       ui.launcher.focus();
     });
     ui.tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -1197,8 +1200,7 @@
     });
     shadow.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !ui.panel.hidden) {
-        ui.panel.hidden = true;
-        ui.launcher.setAttribute('aria-expanded', 'false');
+        setPanelOpen(false);
         ui.launcher.focus();
       }
     });
@@ -1208,7 +1210,7 @@
 
   function loadPreferences() {
     try {
-      chrome.storage.local.get([storageKeys.recent, storageKeys.favorites, storageKeys.markdownSource, storageKeys.markdownAutoSync], result => {
+      chrome.storage.local.get([storageKeys.recent, storageKeys.favorites, storageKeys.markdownSource, storageKeys.markdownAutoSync, storageKeys.panelOpen], result => {
         if (chrome.runtime.lastError) return;
         recentThemes = Array.isArray(result[storageKeys.recent]) ? result[storageKeys.recent] : [];
         favoriteThemes = Array.isArray(result[storageKeys.favorites]) ? result[storageKeys.favorites] : [];
@@ -1219,6 +1221,11 @@
         }
         markdownAutoSync = result[storageKeys.markdownAutoSync] !== false;
         ui.autoSyncInput.checked = markdownAutoSync;
+        // First use opens the work panel by default; afterwards the user's
+        // last open/closed choice is restored without stealing focus.
+        const panelOpen = result[storageKeys.panelOpen] !== false;
+        ui.panel.hidden = !panelOpen;
+        ui.launcher.setAttribute('aria-expanded', String(panelOpen));
         for (const card of ui.cards) {
           const favorite = favoriteThemes.includes(card.dataset.themeKey);
           const button = card.querySelector('[data-favorite]');

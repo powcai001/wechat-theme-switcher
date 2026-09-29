@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.5
+
+- The theme work panel now opens automatically on first use instead of requiring a click on the side launcher.
+- The panel remembers the last open/closed state across editor reloads; automatic restore does not steal keyboard focus.
+
 ## 0.8.4
 
 - Fixed article width shrinking each time themes were switched back and forth (for example Stripe ↔ 飞书效率): stale theme containers are now unwrapped before every write and nested wrappers are rejected by structural validation.

@@ -523,17 +523,31 @@
     });
   }
 
+  function unwrapThemeContainers(root) {
+    root.querySelectorAll('[data-wechat-theme-container], [data-wechat-theme-content]').forEach(node => {
+      const parent = node.parentNode;
+      if (!parent) return;
+      while (node.firstChild) parent.insertBefore(node.firstChild, node);
+      parent.removeChild(node);
+    });
+  }
+
   function replaceEditorHtml(root, html) {
     if (!root || typeof html !== 'string') return false;
     watchEditor(root);
     internalWrite = true;
     root.focus();
+    const before = root.innerHTML;
+    // WeChat's ProseMirror layer can anchor an inserted fragment inside the
+    // previous theme wrapper. Unwrap stale containers first so repeated theme
+    // switches can never nest <section>/<div> wrappers and shrink the article
+    // by one padding layer on every toggle.
+    unwrapThemeContainers(root);
     const selection = window.getSelection();
     const range = document.createRange();
     range.selectNodeContents(root);
     selection.removeAllRanges();
     selection.addRange(range);
-    const before = root.innerHTML;
     let inserted = false;
     try {
       inserted = document.execCommand('insertHTML', false, html);
@@ -544,12 +558,22 @@
 
     // Chromium may parse a multi-node fragment in the context of the first
     // selected heading and produce invalid wrappers such as <h1><p>...</p>.
-    // Detect that shape and use the editor's own HTML surface as a fallback.
+    // Top-level tags alone cannot detect a wrapper nested inside a previous
+    // wrapper (SECTION|SECTION still matches), so also compare the theme
+    // container fingerprint and fall back to a full HTML replacement.
     // Input events keep ProseMirror/other editor layers informed of the write.
     const expected = document.createElement('div');
     expected.innerHTML = html;
     const signature = node => [...node.children].map(child => child.tagName).join('|');
-    const structurallyValid = signature(root) === signature(expected);
+    const themeFingerprint = node => JSON.stringify({
+      containers: node.querySelectorAll('[data-wechat-theme-container]').length,
+      contents: node.querySelectorAll('[data-wechat-theme-content]').length,
+      misplacedContents: [...node.querySelectorAll('[data-wechat-theme-content]')]
+        .filter(element => !element.hasAttribute('data-wechat-theme-container')
+          && !element.parentElement?.matches('[data-wechat-theme-container]')).length
+    });
+    const structurallyValid = signature(root) === signature(expected)
+      && themeFingerprint(root) === themeFingerprint(expected);
     if (!inserted || !structurallyValid) {
       root.innerHTML = html;
       try {

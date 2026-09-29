@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.4
+
+- Fixed article width shrinking each time themes were switched back and forth (for example Stripe ↔ 飞书效率): stale theme containers are now unwrapped before every write and nested wrappers are rejected by structural validation.
+
 ## 0.8.3
 
 - Fixed article side whitespace differing from editor.huasheng.ai by carrying the theme container inside the article HTML for every theme.

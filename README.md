@@ -37,7 +37,7 @@ Markdown 是源内容。切换主题时始终从同一份 Markdown 重建正文�
 - 支持 `.md` 文件导入、拖拽导入、粘贴编辑、从公众号正文导入。
 - 默认自动同步：停止输入约 0.6 秒后写入正文。
 - Markdown 第一个一级标题自动写入公众号标题输入框，并从正文中移除。
-- 内置花生编辑器主题定义，支持搜索、最近使用和收藏。
+- 内置 50 套主题（花生编辑器 20 套 + Raphael Publish 30 套），支持搜索、最近使用和收藏。
 - 连续切换主题时不残留上一个主题的 HTML、class 或行内样式。
 - 代码块使用显式 `<br>` 保留换行，并通过公众号兼容的 `<pre><code>` 输出。
 - 连续多图会转换为公众号兼容的 Table 布局。
@@ -157,7 +157,7 @@ python3 -m json.tool manifest.json
 
 ## 第三方说明
 
-主题定义来自 [alchaincyf/huasheng_editor](https://github.com/alchaincyf/huasheng_editor)，MIT License。  
+主题定义来自 [alchaincyf/huasheng_editor](https://github.com/alchaincyf/huasheng_editor) 与 [raphael-publish](https://github.com/liuxiaopai-ai/raphael-publish)，均为 MIT License。  
 Markdown 管线使用 Turndown 和 markdown-it，均为 MIT License，已本地打包。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## License

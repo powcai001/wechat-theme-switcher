@@ -641,18 +641,48 @@
     });
   }
 
-  function wrapColoredContainer(root, selected) {
+  function wrapThemeContainer(root, selected) {
     const container = selected?.styles?.container || '';
+    // Mirror Huasheng's clipboard output: article content must travel inside
+    // the theme container element. The previous implementation dropped this
+    // wrapper for white-background themes and moved its padding onto the
+    // WeChat editing surface, which rendered with different side whitespace
+    // than the same theme copied from editor.huasheng.ai.
+    const wrapper = document.createElement('div');
+    wrapper.setAttribute('style', container);
+    wrapper.setAttribute('data-wechat-theme-content', 'true');
+    while (root.firstChild) wrapper.appendChild(root.firstChild);
+
     const match = container.match(/background-color:\s*(#[0-9a-f]+)\s*(!important)?/i);
     const background = match?.[1];
-    if (!background || background.toLowerCase() === '#fff' || background.toLowerCase() === '#ffffff') return root;
+    if (!background || background.toLowerCase() === '#fff' || background.toLowerCase() === '#ffffff') {
+      wrapper.setAttribute('data-wechat-theme-container', 'true');
+      return wrapper;
+    }
 
     const section = document.createElement('section');
     const padding = container.match(/padding:\s*([^;]+)/)?.[1]?.trim() || '40px 20px';
     const maxWidth = container.match(/max-width:\s*([^;]+)/)?.[1]?.trim() || '100%';
     section.style.cssText = `background-color: ${background}; padding: ${padding}; max-width: ${maxWidth}; margin: 0 auto; box-sizing: border-box; word-wrap: break-word;`;
     section.setAttribute('data-wechat-theme-container', 'true');
-    while (root.firstChild) section.appendChild(root.firstChild);
+    section.appendChild(wrapper);
+
+    // Match Huasheng: inner elements must not repeat the outer width,
+    // centering, or container background rules.
+    for (const node of section.querySelectorAll('*')) {
+      const style = node.getAttribute('style');
+      if (!style) continue;
+      const next = style
+        .replace(/max-width:\s*[^;]+;?/g, '')
+        .replace(/margin:\s*0\s+auto;?/g, '')
+        .replace(new RegExp(`background-color:\\s*${background}(\\s*!important)?;?`, 'gi'), '')
+        .replace(/;\s*;/g, ';')
+        .replace(/^\s*;|\s*;$/g, '')
+        .trim();
+      if (next === style) continue;
+      if (next) node.setAttribute('style', next);
+      else node.removeAttribute('style');
+    }
     return section;
   }
 
@@ -665,8 +695,6 @@
     normalizeMarkdownTables(rendered);
     groupConsecutiveImages(rendered);
     const themeStyles = selected?.styles || {};
-    const containerStyle = themeStyles.container || '';
-    if (containerStyle) applyThemeCss(rendered, containerStyle);
     for (const [tag, css] of Object.entries(themeStyles)) {
         if (tag === 'container' || !css) continue;
         for (const node of rendered.querySelectorAll(tag)) {
@@ -688,7 +716,7 @@
       normalizeListMarkers(rendered);
       normalizeTaskLists(rendered);
       normalizeMarkdownTables(rendered);
-      rendered = wrapColoredContainer(rendered, selected);
+      rendered = wrapThemeContainer(rendered, selected);
     }
     return rendered;
   }
@@ -781,7 +809,7 @@
   }
 
   function extractArticleTitle(rendered) {
-    const heading = [...rendered.children].find(node => node.tagName === 'H1');
+    const heading = rendered.querySelector('h1');
     if (!heading) return null;
     const title = heading.textContent.replace(/\s+/g, ' ').trim();
     heading.remove();
@@ -809,7 +837,10 @@
     if (articleTitle) {
       const titleEditor = findTitleEditor(root);
       titleUpdated = writeTitleToEditor(titleEditor, articleTitle);
-      if (rendered.firstElementChild) rendered.firstElementChild.style.setProperty('margin-top', '0', 'important');
+      const contentRoot = rendered.matches('[data-wechat-theme-content]')
+        ? rendered
+        : rendered.querySelector('[data-wechat-theme-content]');
+      if (contentRoot?.firstElementChild) contentRoot.firstElementChild.style.setProperty('margin-top', '0', 'important');
     }
     const editorHtml = rendered.matches('[data-wechat-theme-container]')
       ? rendered.outerHTML.trim()

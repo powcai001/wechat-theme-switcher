@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.3
+
+- Fixed article side whitespace differing from editor.huasheng.ai by carrying the theme container inside the article HTML for every theme.
+- Added 30 MIT-licensed themes from raphael-publish (50 themes total).
+- Added h5/h6 support inheritance for raphael themes via container defaults.
+- Store packages now place `manifest.json` at the zip root and exclude development-only files.
+- Build script produces both the store package and the wrapped GitHub offline-install package.
+
 ## 0.8.2
 
 - Added comprehensive Markdown regression fixture.

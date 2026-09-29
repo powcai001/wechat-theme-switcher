@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "公众号一键换主题 Spike",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "在公众号文章编辑页内搜索、预览和直接切换排版主题。",
   "permissions": [
     "tabs",
